@@ -2,14 +2,23 @@ package dev.collegues.controllers;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import Exception.CollegueNonTrouveException;
+import dev.collegues.dto.CollegueUpdateDto;
 import dev.collegues.entites.Collegue;
 import dev.collegues.repositories.ColleguesRepository;
 
@@ -20,10 +29,12 @@ public class ColleguesController {
 	@Autowired
 	ColleguesRepository collegueRepository;
 
-	// GET /collegues?nom=XXX
-	// recupere les matricules dont le nom est passe en parametre
+	/**
+	 * GET /collegues?nom=XXX // recupere les matricules dont le nom est passe en
+	 * parametre
+	 */
 	@GetMapping
-	public ResponseEntity<Object> matriculesParNom(@RequestParam Optional<String> nom) {
+	public ResponseEntity<Object> matriculesParNom(@Valid @RequestParam Optional<String> nom) {
 		if (nom.isPresent()) {
 			List<Collegue> collegues = collegueRepository.findByNom(nom.get());
 			String[] matricules = new String[collegues.size()];
@@ -43,6 +54,56 @@ public class ColleguesController {
 	public ResponseEntity<Object> collegues() {
 		List<Collegue> collegues = collegueRepository.findAll();
 		return ResponseEntity.status(200).body(collegues);
+	}
+
+	/**
+	 * GET : collegues/matricule/matricule ------- Recuperation d'un collegue par //
+	 * son matricule
+	 */
+	@GetMapping("{matricule}")
+	public ResponseEntity<Object> collegueParMatricule(@Valid @PathVariable Optional<String> matricule)
+			throws CollegueNonTrouveException {
+		if (matricule.isPresent()) {
+			Optional<Collegue> collegue = collegueRepository.findByMatricule(matricule.get());
+			if (collegue.isPresent())
+				return ResponseEntity.status(200).body(collegue.get());
+			else
+				return CollegueNonTrouveException.CollegueNonTrouveException();
+
+		} else {
+			return ResponseEntity.status(404).body("Erreur : le matricule n'est pas present");
+		}
+	}
+
+	/** POST : collegues/ ------ creation d'un collegue */
+	@PostMapping
+	public ResponseEntity<Object> creationClient(@RequestBody Collegue collegue) {
+		collegue.setMatricule(UUID.randomUUID().toString());
+		collegueRepository.save(collegue);
+		Optional<Collegue> collegueSaved = collegueRepository.findByMatricule(collegue.getMatricule());
+		if (collegueSaved.isPresent())
+			return ResponseEntity.status(200).body(collegueSaved.get());
+		else
+			return ResponseEntity.status(500).body("Erreur : le collegue n'a pas ete sauvegarde");
+	}
+
+	/** met a jour les donnees d'un client en fonction de son matricule */
+	@PatchMapping("{matricule}")
+	public ResponseEntity<Object> updateClient(@RequestBody CollegueUpdateDto collegueUpdate,
+			@Valid @PathVariable Optional<String> matricule) {
+		Optional<Collegue> collegue = collegueRepository.findByMatricule(matricule.get());
+		if (collegue.isPresent()) {
+			if (collegueUpdate.getPhotoUrl() != null)
+				collegue.get().setPhotoUrl(collegueUpdate.getPhotoUrl());
+			if (collegueUpdate.getEmail() != null)
+				collegue.get().setEmail(collegueUpdate.getEmail());
+			if (collegueUpdate.getNom() != null)
+				collegue.get().setNom(collegueUpdate.getNom());
+			collegueRepository.save(collegue.get());
+			return ResponseEntity.status(200).body("Collegue mis a jour");
+		} else {
+			return ResponseEntity.status(404).body("Erreur : le collegue a mettre a jour n'a pas ete trouve");
+		}
 	}
 
 }
