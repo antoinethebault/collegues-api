@@ -2,8 +2,6 @@ package dev.collegues.dto;
 
 public class CollegueUpdateDto {
 
-	private String nom;
-
 	private String email;
 
 	private String photoUrl;
@@ -15,29 +13,10 @@ public class CollegueUpdateDto {
 	 * @param email
 	 * @param photoUrl
 	 */
-	public CollegueUpdateDto(String nom, String email, String photoUrl) {
+	public CollegueUpdateDto(String email, String photoUrl) {
 		super();
-		this.nom = nom;
 		this.email = email;
 		this.photoUrl = photoUrl;
-	}
-
-	/**
-	 * Getter
-	 * 
-	 * @return the nom
-	 */
-	public String getNom() {
-		return nom;
-	}
-
-	/**
-	 * Setter
-	 * 
-	 * @param nom the nom to set
-	 */
-	public void setNom(String nom) {
-		this.nom = nom;
 	}
 
 	/**

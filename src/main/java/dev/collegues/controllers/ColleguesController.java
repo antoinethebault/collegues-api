@@ -8,6 +8,7 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,6 +35,7 @@ public class ColleguesController {
 	 * parametre
 	 */
 	@GetMapping
+	@CrossOrigin
 	public ResponseEntity<Object> matriculesParNom(@Valid @RequestParam Optional<String> nom) {
 		if (nom.isPresent()) {
 			List<Collegue> collegues = collegueRepository.findByNom(nom.get());
@@ -51,6 +53,7 @@ public class ColleguesController {
 
 	@GetMapping
 	@RequestMapping(value = "/all")
+	@CrossOrigin
 	public ResponseEntity<Object> collegues() {
 		List<Collegue> collegues = collegueRepository.findAll();
 		return ResponseEntity.status(200).body(collegues);
@@ -61,6 +64,7 @@ public class ColleguesController {
 	 * son matricule
 	 */
 	@GetMapping("{matricule}")
+	@CrossOrigin
 	public ResponseEntity<Object> collegueParMatricule(@Valid @PathVariable Optional<String> matricule)
 			throws CollegueNonTrouveException {
 		if (matricule.isPresent()) {
@@ -77,6 +81,7 @@ public class ColleguesController {
 
 	/** POST : collegues/ ------ creation d'un collegue */
 	@PostMapping
+	@CrossOrigin
 	public ResponseEntity<Object> creationClient(@RequestBody Collegue collegue) {
 		collegue.setMatricule(UUID.randomUUID().toString());
 		collegueRepository.save(collegue);
@@ -89,6 +94,7 @@ public class ColleguesController {
 
 	/** met a jour les donnees d'un client en fonction de son matricule */
 	@PatchMapping("{matricule}")
+	@CrossOrigin
 	public ResponseEntity<Object> updateClient(@RequestBody CollegueUpdateDto collegueUpdate,
 			@Valid @PathVariable Optional<String> matricule) {
 		Optional<Collegue> collegue = collegueRepository.findByMatricule(matricule.get());
@@ -97,10 +103,8 @@ public class ColleguesController {
 				collegue.get().setPhotoUrl(collegueUpdate.getPhotoUrl());
 			if (collegueUpdate.getEmail() != null)
 				collegue.get().setEmail(collegueUpdate.getEmail());
-			if (collegueUpdate.getNom() != null)
-				collegue.get().setNom(collegueUpdate.getNom());
 			collegueRepository.save(collegue.get());
-			return ResponseEntity.status(200).body("Collegue mis a jour");
+			return ResponseEntity.status(200).body(collegue.get());
 		} else {
 			return ResponseEntity.status(404).body("Erreur : le collegue a mettre a jour n'a pas ete trouve");
 		}
